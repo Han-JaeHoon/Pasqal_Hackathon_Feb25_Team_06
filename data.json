@@ -1,7 +1,4 @@
 {
-    "cal_list": [
-        0,
-        1
-    ],
-    "NQC": []
+    "cal_list": [],
+    "QAOA_list": []
 }
