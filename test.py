@@ -77,11 +77,10 @@ for i in range(len(cal_list)):
         print(
           f"classical_result : {float(final_config[2])},best : {rl_qaoa_beta.node_assignments}"
       )
-
         # Execute RQAOA
-        final_config = rl_qaoa_beta.RL_QAOA(
-          episodes=50, epochs=100, log_interval=25, correct_ans=float(final_config[2])
-      )
+        rl_qaoa_beta.RL_QAOA(
+            episodes=50, epochs=100, log_interval=25, correct_ans=float(final_config[2])
+        )
         QAOA_list.append([rl_qaoa_beta.avg_values, float(final_config[2])])
     data = {
     "cal_list": cal_list[i],
