@@ -7,7 +7,8 @@ from modules.data_process import add_constraint
 import random
 import json
 
-
+EPISODE = 50
+EPOCH = 100
 # Define QAOA depth
 def data_to_QUBO(matrix, hamming_weight, l):
     return -np.diag([1] * len(matrix)) + matrix / hamming_weight * l
@@ -79,7 +80,7 @@ for i in range(len(cal_list)):
       )
         # Execute RQAOA
         rl_qaoa_beta.RL_QAOA(
-            episodes=50, epochs=100, log_interval=25, correct_ans=float(final_config[2])
+            episodes=EPISODE, epochs=EPOCH, log_interval=25, correct_ans=float(final_config[2])
         )
         QAOA_list.append([rl_qaoa_beta.avg_values, float(final_config[2])])
     data = {
@@ -100,7 +101,6 @@ for i in range(len(cal_list)):
         plt.title("Optimization Process")
         plt.legend()
         plt.grid(True)
-        plt.show()
         plt.savefig(f"Optimization_Process_list_{cal_list[i]}.png")
 
         plt.figure(figsize=(10, 5))
@@ -116,6 +116,5 @@ for i in range(len(cal_list)):
         plt.title(
           f"Zoomed View: Convergence to Optimal Value - cal_list={cal_list[i]}"
       )
-        plt.show()
         plt.savefig(f"zoomed_cal_list_{cal_list[i]}.png")
         plt.close()
