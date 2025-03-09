@@ -27,22 +27,14 @@ def QpasqalOptimized(matrix, number):
     return res
 
 
-"""
-여기값 재훈 : 15,16
-
-세현 : 500,501
-
-성근 : 200,201
-"""
-
-cal_list = [500 + i for i in range(10)]
 
 
-def test_qaoa(num_episode, num_epoch, beta, matrix_idx,lr, model_name,save_dir):
+
+def test_qaoa(num_episode, num_epoch, beta, matrix_idx,lr,matrix_size, hamming_weight, model_name,save_dir):
     depth = 1
-    size = 9
+    size = matrix_size
     seed = 50
-    hamming_weight = 4
+    hamming_weight = hamming_weight
     penalty = 1
     with open(f"./data/matrices{size}by{size}.json", "r") as f:
         matrices_data = json.load(f)
