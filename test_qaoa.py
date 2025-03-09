@@ -7,11 +7,11 @@ from modules.data_process import add_constraint
 import random
 import json
 
-EPISODE = 1
-EPOCH = 1
+
 # Define QAOA depth
 def data_to_QUBO(matrix, hamming_weight, l):
     return -np.diag([1] * len(matrix)) + matrix / hamming_weight * l
+
 
 def QpasqalOptimized(matrix, number):
     res = copy.deepcopy(matrix)
@@ -35,12 +35,10 @@ def QpasqalOptimized(matrix, number):
 성근 : 200,201
 """
 
-cal_list = [
-    500+ i for i in range(10)
-]
+cal_list = [500 + i for i in range(10)]
 
 
-for i in range(len(cal_list)):
+def test_qaoa(num_episode, num_epoch, beta, matrix_idx,lr, model_name,save_dir):
     depth = 1
     size = 9
     seed = 50
@@ -51,44 +49,55 @@ for i in range(len(cal_list)):
 
     # Generate a QUBO matrix that is challenging for classical QAOA optimization
 
-    Q = data_to_QUBO(np.array(matrices_data[cal_list[i]]), hamming_weight, 3)
+    Q = data_to_QUBO(np.array(matrices_data[matrix_idx]), hamming_weight,15)
     Q_cal = zero_lower_triangle(
-    Q + add_constraint([1] * size, hamming_weight) * penalty
-)
+        Q + add_constraint([1] * size, hamming_weight) * penalty
+    )
 
     n = Q.shape[0]
     n_c = 2
 
     init_params = np.reshape(np.array([0, 0.0] * (n - n_c)), -1)
+    b_vector = np.array([[beta] * int(n**2) for i in range(n - n_c)])
 
     # RL-QAOA setup
-    rl_qaoa_beta = RL_QAA(
-    Q_cal,
-    n,
-    np.array([[100.0] * int((n**2)) for i in range(n - n_c)]),
-    learning_rate_init=0.5,
-)
-    final_config = rl_qaoa_beta.rqaoa_execute()
-    rl_qaoa_beta.n_c = n_c
+    # Initialize RL-QAOA with the constraint-enhanced QUBO
+    rl_qaoa = RL_QAOA(
+        Q_cal,
+        n_c=n,
+        init_paramter=init_params,
+        b_vector=b_vector,
+        QAOA_depth=1,
+        learning_rate_init= lr,
+    )
+
+    final_config = rl_qaoa.rqaoa_execute()
+
+    rl_qaoa.n_c = n_c
     print(
-    f"classical_result : {float(final_config[2])},best : {rl_qaoa_beta.node_assignments}"
-)
+        f"classical_result : {float(final_config[2])},best : {rl_qaoa.node_assignments}"
+    )
     # Execute RQAOA
-    rl_qaoa_beta.RL_QAOA(
-        episodes=EPISODE, epochs=EPOCH, log_interval=25, correct_ans=float(final_config[2])
+    rl_qaoa.RL_QAOA(
+        episodes=num_episode,
+        epochs=num_epoch,
+        log_interval=25,
+        correct_ans=float(final_config[2]),
     )
 
     data = {
-        "cal_list": cal_list[i],
+        "cal_list": matrix_idx,
         "QAOA_list": [
-            list(rl_qaoa_beta.avg_values),float(final_config[2]),int(rl_qaoa_beta.tree.node_num),
+            list(rl_qaoa.avg_values),
+            float(final_config[2]),
+            int(rl_qaoa.tree.node_num),
         ],
     }
 
-    with open(f"data_{cal_list[i]}.json", "w") as json_file:
+    with open(f"{save_dir}/{model_name}_data_{matrix_idx}.json", "w") as json_file:
         json.dump(data, json_file, indent=4)
 
-    data = rl_qaoa_beta.avg_values
+    data = rl_qaoa.avg_values
     optimal_value = float(final_config[2])
     plt.figure(figsize=(10, 5))
     plt.plot(data, marker="o", linestyle="-", color="b", label="Optimization Progress")
@@ -98,7 +107,7 @@ for i in range(len(cal_list)):
     plt.title("Optimization Process")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"Optimization_Process_list_{cal_list[i]}.png")
+    plt.savefig(f"{save_dir}/{model_name}_Optimization_Process_list_{matrix_idx}.png")
 
     plt.figure(figsize=(10, 5))
     plt.plot(data, marker="o", linestyle="-", color="b", label="Optimization Progress")
@@ -111,7 +120,12 @@ for i in range(len(cal_list)):
     plt.legend()
     plt.grid(True)
     plt.title(
-    f"Zoomed View: Convergence to Optimal Value - cal_list={cal_list[i]}"
-)
-    plt.savefig(f"zoomed_cal_list_{cal_list[i]}.png")
+        f"Zoomed View: Convergence to Optimal Value - cal_list={matrix_idx}"
+    )
+    plt.savefig(f"{save_dir}/{model_name}_zoomed_cal_list_{matrix_idx}.png")
     plt.close()
+
+
+if __name__ == "__main__":
+    # test_qaoa(num_episode=10, num_epoch=10, beta=25.0, lr=[0.1 ,0.5] ,matrix_idx=1, model_name="RL_QAOA")
+    test_qaoa(num_episode=10, num_epoch=10, beta=100000000.0, lr=[0.0 ,0.5] ,matrix_idx=5, model_name="R_QAOA")
